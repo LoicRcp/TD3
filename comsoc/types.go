@@ -2,6 +2,7 @@ package comsoc
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Alternative int
@@ -44,6 +45,17 @@ func checkProfile(prefs []Alternative, alts []Alternative) error {
 	}
 	if len(prefs) != len(alts) {
 		return errors.New("L'ensemble des alternatives n'est pas représenté dans ce profil.")
+	}
+	return nil
+}
+
+func checkProfileAlternative(prefs Profile, alts []Alternative) error {
+	for agentIndex, agentPref := range prefs {
+		result := checkProfile(agentPref, alts)
+		if result != nil {
+			return fmt.Errorf("Le profil de l'agent %d n'est pas correct.\n%v", agentIndex, result)
+
+		}
 	}
 	return nil
 }
