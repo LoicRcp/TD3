@@ -1,5 +1,9 @@
 package comsoc
 
+import (
+	"errors"
+)
+
 type Alternative int
 type Profile [][]Alternative
 type Count map[Alternative]int
@@ -28,4 +32,18 @@ func maxCount(count Count) (bestAlts []Alternative) {
 		}
 	}
 	return bestAlts
+}
+
+func checkProfile(prefs []Alternative, alts []Alternative) error {
+	altsCounter := make(map[Alternative]int, len(alts))
+	for _, alternative := range prefs {
+		altsCounter[alternative] += 1
+		if altsCounter[alternative] > 1 {
+			return errors.New("L'unicité n'est pas respecté dans ce profil.")
+		}
+	}
+	if len(prefs) != len(alts) {
+		return errors.New("L'ensemble des alternatives n'est pas représenté dans ce profil.")
+	}
+	return nil
 }
