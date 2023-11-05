@@ -12,3 +12,7 @@ func rank(alt Alternative, prefs []Alternative) int {
 	}
 	return -1
 }
+
+func isPref(alt1, alt2 Alternative, prefs []Alternative) bool {
+	return rank(alt1, prefs) < rank(alt2, prefs)
+}
