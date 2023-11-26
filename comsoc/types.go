@@ -59,3 +59,21 @@ func checkProfileAlternative(prefs Profile, alts []Alternative) error {
 	}
 	return nil
 }
+
+func TieBreakFactory(orderedAlts []Alternative) func([]Alternative) (Alternative, error) {
+	// Retourne une fonction de tie-break personnalisée basée sur un ordre spécifié d'alternatives.
+	return func(alts []Alternative) (Alternative, error) {
+		// Parcours de chaque alternative dans l'ordre spécifié.
+		for _, orderedAlt := range orderedAlts {
+			// Compare avec les alternatives à départager.
+			for _, alt := range alts {
+				// Si une alternative correspond à l'ordre spécifié, elle est renvoyée.
+				if orderedAlt == alt {
+					return alt, nil
+				}
+			}
+		}
+		// Si aucune correspondance n'est trouvée, retourne une erreur.
+		return 0, errors.New("aucune alternative correspondante trouvée")
+	}
+}
