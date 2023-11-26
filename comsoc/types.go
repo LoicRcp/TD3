@@ -3,6 +3,7 @@ package comsoc
 import (
 	"errors"
 	"fmt"
+	"sync"
 )
 
 type Alternative int
@@ -18,7 +19,7 @@ func rank(alt Alternative, prefs []Alternative) int {
 	return -1
 }
 
-func isPref(alt1, alt2 Alternative, prefs []Alternative) bool {
+func IsPref(alt1, alt2 Alternative, prefs []Alternative) bool {
 	return rank(alt1, prefs) < rank(alt2, prefs)
 }
 
@@ -76,4 +77,43 @@ func TieBreakFactory(orderedAlts []Alternative) func([]Alternative) (Alternative
 		// Si aucune correspondance n'est trouvée, retourne une erreur.
 		return 0, errors.New("aucune alternative correspondante trouvée")
 	}
+}
+
+func CondorcetWinner(p Profile) ([]Alternative, error) {
+	var wg sync.WaitGroup                           // Crée un groupe de synchronisation pour les goroutines
+	winnerChan := make(chan Alternative, len(p[0])) // Crée un canal pour recevoir le gagnant potentiel
+
+	for i := range p[0] {
+		wg.Add(1)                  // Ajoute une tâche au groupe de synchronisation
+		go func(alt Alternative) { // Démarre une goroutine pour chaque alternative
+			defer wg.Done() // Signale que la goroutine est terminée à la fin de son exécution
+			winCount := 0
+			for j := range p[0] {
+				if alt == Alternative(j) {
+					continue // Ignore l'auto-comparaison
+				}
+				for _, prefs := range p {
+					if IsPref(alt, Alternative(j), prefs) {
+						winCount++ // Incrémente le compteur de victoires si l'alternative est préférée
+						break
+					}
+				}
+			}
+			if winCount == len(p[0])-1 {
+				winnerChan <- alt // Envoie l'alternative dans le canal si elle est gagnante de Condorcet
+			}
+		}(Alternative(i))
+	}
+
+	wg.Wait()         // Attend que toutes les goroutines soient terminées
+	close(winnerChan) // Ferme le canal après la fin des goroutines
+
+	winners := make([]Alternative, 0)
+	for winner := range winnerChan { // Lit les gagnants potentiels du canal
+		winners = append(winners, winner)
+	}
+	if len(winners) == 1 {
+		return winners, nil // Retourne le gagnant de Condorcet s'il est unique
+	}
+	return []Alternative{}, nil // Retourne un slice vide s'il n'y a pas de gagnant de Condorcet
 }
